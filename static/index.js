@@ -419,7 +419,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3, MODE_STAIR = 4, MODE
                 createjs.Sound.play("err");
             }
             tar.classList.add('bad');
-            if ((mode === MODE_NORMAL || mode === MODE_STAIR) && _gameHealth > 0) {
+            if ((mode === MODE_NORMAL || mode >= MODE_STAIR) && _gameHealth > 0) {
                 _gameHealth--;
                 _gameScore -= 10;
             } else {
