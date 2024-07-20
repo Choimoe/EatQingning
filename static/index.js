@@ -1,19 +1,20 @@
-const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
+const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3, MODE_STAIR = 4, MODE_MINI = 5, MODE_LONG = 6;
 
-(function(w) {
+(function (w) {
     function getJsonI18N() {
         // https://developer.mozilla.org/zh-CN/docs/Web/API/Navigator/language
-        
+
         const LANGUAGES = [
             { regex: /^zh\b/, lang: 'zh' },
             { regex: /^ja\b/, lang: 'ja' },
-            { regex: /.*/, lang: 'en'}
+            { regex: /.*/, lang: 'en' }
         ]
 
         const lang = LANGUAGES.find(l => l.regex.test(navigator.language)).lang
-        
+
         return $.ajax({
             url: `./static/i18n/${lang}.json`,
+            // url: `http://localhost:1342/static/i18n/zh.json`,
             dataType: 'json',
             method: 'GET',
             async: false,
@@ -24,12 +25,12 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
     const I18N = getJsonI18N()
 
-    $('[data-i18n]').each(function() {
+    $('[data-i18n]').each(function () {
         const content = I18N[this.dataset.i18n];
         $(this).text(content);
     });
 
-    $('[data-placeholder-i18n]').each(function() {
+    $('[data-placeholder-i18n]').each(function () {
         $(this).attr('placeholder', I18N[this.dataset.placeholderI18n]);
     });
 
@@ -42,7 +43,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         (isDesktop ? '#welcome,#GameTimeLayer,#GameLayerBG,#GameScoreLayer.SHADE{position: absolute;}' :
             '#welcome,#GameTimeLayer,#GameLayerBG,#GameScoreLayer.SHADE{position:fixed;}@media screen and (orientation:landscape) {#landscape {display: box; display: -webkit-box; display: -moz-box; display: -ms-flexbox;}}') +
         '</style>');
-    let map = {'d': 1, 'f': 2, 'j': 3, 'k': 4};
+    let map = { 'd': 1, 'f': 2, 'j': 3, 'k': 4 };
     if (isDesktop) {
         document.write('<div id="gameBody">');
         document.onkeydown = function (e) {
@@ -62,12 +63,16 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
     let soundMode = getSoundMode();
 
-    w.init = function() {
+    let _lastKey = 0;
+    let _nextKeyDir = 1;
+    let _jackked = 1;
+
+    w.init = function () {
         showWelcomeLayer();
         body = document.getElementById('gameBody') || document.body;
         body.style.height = window.innerHeight + 'px';
         transform = typeof (body.style.webkitTransform) != 'undefined' ? 'webkitTransform' : (typeof (body.style.msTransform) !=
-        'undefined' ? 'msTransform' : 'transform');
+            'undefined' ? 'msTransform' : 'transform');
         transitionDuration = transform.replace(/ransform/g, 'ransitionDuration');
         GameTimeLayer = document.getElementById('GameTimeLayer');
         GameLayer.push(document.getElementById('GameLayer1'));
@@ -95,7 +100,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return cookie('soundMode') ? cookie('soundMode') : 'on';
     }
 
-    w.changeSoundMode = function() {
+    w.changeSoundMode = function () {
         if (soundMode === 'on') {
             soundMode = 'off';
             $('#sound').text(I18N['sound-off']);
@@ -107,21 +112,26 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     }
 
     function modeToString(m) {
-        return m === MODE_NORMAL ? I18N['normal'] : (m === MODE_ENDLESS ? I18N['endless'] : I18N['practice']);
+        if (m === MODE_NORMAL) return I18N['normal'];
+        if (m === MODE_ENDLESS) return I18N['endless'];
+        if (m === MODE_PRACTICE) return I18N['practice'];
+        if (m === MODE_STAIR) return I18N['stair'];
+        if (m === MODE_MINI) return I18N['minijack'];
+        if (m === MODE_LONG) return I18N['longjack'];
     }
 
-    w.changeMode = function(m) {
+    w.changeMode = function (m) {
         mode = m;
         cookie('gameMode', m);
         $('#mode').text(modeToString(m));
     }
 
-    w.readyBtn = function() {
+    w.readyBtn = function () {
         closeWelcomeLayer();
         updatePanel();
     }
 
-    w.winOpen = function() {
+    w.winOpen = function () {
         window.open(location.href + '?r=' + Math.random(), 'nWin', 'height=500,width=320,toolbar=no,menubar=no,scrollbars=no');
         let opened = window.open('about:blank', '_self');
         opened.opener = null;
@@ -175,8 +185,8 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         _gameBBListIndex = 0,
         _gameOver = false,
         _gameStart = false,
-        _gameSettingNum=20,
-        _gameTime, _gameTimeNum, _gameScore, _date1, deviationTime;
+        _gameSettingNum = 20,
+        _gameTime, _gameTimeNum, _gameScore, _gameClick, _date1, deviationTime, _gameHealth;
 
     let _gameStartTime, _gameStartDatetime;
 
@@ -200,10 +210,13 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         _gameBBList = [];
         _gameBBListIndex = 0;
         _gameScore = 0;
+        _gameClick = 0;
+        _gameHealth = 2;
         _gameOver = false;
         _gameStart = false;
         _gameTimeNum = _gameSettingNum;
         _gameStartTime = 0;
+        _lastKey = Math.floor(Math.random() * 1000) % 4;
         countBlockSize();
         refreshGameLayer(GameLayer[0]);
         refreshGameLayer(GameLayer[1], 1);
@@ -219,7 +232,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     }
 
     function getCPS() {
-        let cps = _gameScore / ((new Date().getTime() - _gameStartDatetime) / 1000);
+        let cps = _gameClick / ((new Date().getTime() - _gameStartDatetime) / 1000);
         if (isNaN(cps) || cps === Infinity || _gameStartTime < 2) {
             cps = 0;
         }
@@ -254,7 +267,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
     }
     //使重试按钮获得焦点
-    function foucusOnReplay(){
+    function foucusOnReplay() {
         $('#replay').focus()
     }
 
@@ -296,8 +309,35 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     let _ttreg = / t{1,2}(\d+)/,
         _clearttClsReg = / t{1,2}\d+| bad/;
 
+
+    const _changeDirProb = [
+        [-1, -1, 0.2, 0.7],
+        [0.7, 0.2, -1, -1],
+    ];
+    function nextKeyGen(test) {
+        if (test === 1) { _jackked = 0; return _lastKey; }
+        if (mode === MODE_STAIR) {
+            if (Math.random() < _changeDirProb[_nextKeyDir === 1 ? 0 : 1][_lastKey]) _nextKeyDir = -_nextKeyDir;
+            _newKey = (_lastKey + _nextKeyDir + 4) % 4;
+            _lastKey = _newKey;
+            return _newKey;
+        }
+        if (mode === MODE_MINI) {
+            if (_jackked == 1) { _jackked = 0; return _lastKey; }
+            _lastKey = (_lastKey + 1 + Math.floor(Math.random() * 1000) % 3) % 4;
+            _jackked = 1;
+            return _lastKey;
+        }
+        if (mode === MODE_LONG) {
+            return _lastKey;
+        }
+        _lastKey = Math.floor(Math.random() * 1000) % 4;
+        _jackked = 1;
+        return _lastKey;
+    }
+
     function refreshGameLayer(box, loop, offset) {
-        let i = Math.floor(Math.random() * 1000) % 4 + (loop ? 0 : 4);
+        let i = nextKeyGen(1) + (loop ? 0 : 4);
         for (let j = 0; j < box.children.length; j++) {
             let r = box.children[j], rstyle = r.style;
             rstyle.left = (j % 4) * blockSize + 'px';
@@ -310,9 +350,9 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
                     cell: i % 4,
                     id: r.id
                 });
-                r.className += ' t' + (Math.floor(Math.random() * 1000) % 5 + 1);
+                r.className += ' t' + (Math.floor(Math.random() * 1000) % 8 + 1);
                 r.notEmpty = true;
-                i = (Math.floor(j / 4) + 1) * 4 + Math.floor(Math.random() * 1000) % 4;
+                i = (Math.floor(j / 4) + 1) * 4 + nextKeyGen(2);
             } else {
                 r.notEmpty = false;
             }
@@ -369,6 +409,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             tar.className = tar.className.replace(_ttreg, ' tt$1');
             _gameBBListIndex++;
             _gameScore++;
+            _gameClick++;
 
             updatePanel();
 
@@ -378,12 +419,17 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
                 createjs.Sound.play("err");
             }
             tar.classList.add('bad');
-            if (mode === MODE_PRACTICE) {
-                setTimeout(() => {
-                    tar.classList.remove('bad');
-                }, 500);
+            if ((mode === MODE_NORMAL || mode === MODE_STAIR) && _gameHealth > 0) {
+                _gameHealth--;
+                _gameScore -= 10;
             } else {
-                gameOver();
+                if (mode === MODE_PRACTICE) {
+                    setTimeout(() => {
+                        tar.classList.remove('bad');
+                    }, 500);
+                } else {
+                    gameOver();
+                }
             }
         }
         return false;
@@ -443,9 +489,14 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         l.attr('class', l.attr('class').replace(/bgc\d/, 'bgc' + c));
         $('#GameScoreLayer-text').html(shareText(cps));
         let normalCond = legalDeviationTime() || mode !== MODE_NORMAL;
-        l.css('color', normalCond ? '': 'red');
+        l.css('color', normalCond ? '' : 'red');
+        let bpm = cps * 15;
+        let prefix = '';
+        if (mode === MODE_STAIR) { bpm = cps * 15; prefix = '(' + bpm.toFixed(0) + 'stream)' }
+        if (mode === MODE_MINI) { bpm = cps * 15; prefix = '(' + bpm.toFixed(0) + 'minijack)' }
+        if (mode === MODE_LONG) { bpm = cps * 15; prefix = '(' + bpm.toFixed(0) + 'longjack)' }
 
-        $('#cps').text(cps.toFixed(2));
+        $('#cps').text(cps.toFixed(2) + prefix);
         $('#score').text(scoreToString(score));
         $('#GameScoreLayer-score').css('display', mode === MODE_ENDLESS ? 'none' : '');
         $('#best').text(scoreToString(best));
@@ -457,12 +508,12 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         $('#GameScoreLayer').css('display', 'none');
     }
 
-    w.replayBtn = function() {
+    w.replayBtn = function () {
         gameRestart();
         hideGameScoreLayer();
     }
 
-    w.backBtn = function() {
+    w.backBtn = function () {
         gameRestart();
         hideGameScoreLayer();
         showWelcomeLayer();
@@ -480,7 +531,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
         if (cps <= 5) return I18N['text-level-1'];
         if (cps <= 8) return I18N['text-level-2'];
-        if (cps <= 10)  return I18N['text-level-3'];
+        if (cps <= 10) return I18N['text-level-3'];
         if (cps <= 15) return I18N['text-level-4'];
         return I18N['text-level-5'];
     }
@@ -506,7 +557,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             }
             return value = document.cookie.match("(?:^|;)\\s*" + name.replace(/([-.*+?^${}()|[\]\/\\])/g, "\\$1") + "=([^;]*)"),
                 value = value && "string" == typeof value[1] ? unescape(value[1]) : !1, (/^(\{|\[).+\}|\]$/.test(value) ||
-                /^[0-9]+$/g.test(value)) && eval("value=" + value), value;
+                    /^[0-9]+$/g.test(value)) && eval("value=" + value), value;
         }
         let data = {};
         value = document.cookie.replace(/\s/g, "").split(";");
@@ -540,22 +591,22 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
     }
 
-    w.show_btn = function() {
+    w.show_btn = function () {
         $("#btn_group,#desc").css('display', 'block')
         $('#setting').css('display', 'none')
     }
 
-    w.show_setting = function() {
+    w.show_setting = function () {
         $('#btn_group,#desc').css('display', 'none')
         $('#setting').css('display', 'block')
         $('#sound').text(soundMode === 'on' ? I18N['sound-on'] : I18N['sound-off']);
     }
 
-    w.save_cookie = function() {
+    w.save_cookie = function () {
         const settings = ['username', 'message', 'keyboard', 'title', 'gameTime'];
         for (let s of settings) {
-            let value=$(`#${s}`).val();
-            if(value){
+            let value = $(`#${s}`).val();
+            if (value) {
                 cookie(s, value.toString(), 100);
             }
         }
@@ -567,7 +618,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return str === '' || str === undefined || str == null;
     }
 
-    w.goRank = function() {
+    w.goRank = function () {
         let name = $("#username").val();
         let link = './rank.php';
         if (!isnull(name)) {
@@ -604,7 +655,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     function saveImage(dom, callback) {
         if (dom.files && dom.files[0]) {
             let reader = new FileReader();
-            reader.onload = function() {
+            reader.onload = function () {
                 callback(this.result);
             }
             reader.readAsDataURL(dom.files[0]);
@@ -612,11 +663,11 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     }
 
 
-    w.getClickBeforeImage = function() {
+    w.getClickBeforeImage = function () {
         $('#click-before-image').click();
     }
 
-    w.saveClickBeforeImage = function() {
+    w.saveClickBeforeImage = function () {
         const img = document.getElementById('click-before-image');
         saveImage(img, r => {
             clickBeforeStyle.html(`
@@ -627,11 +678,11 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         })
     }
 
-    w.getClickAfterImage = function() {
+    w.getClickAfterImage = function () {
         $('#click-after-image').click();
     }
 
-    w.saveClickAfterImage = function() {
+    w.saveClickAfterImage = function () {
         const img = document.getElementById('click-after-image');
         saveImage(img, r => {
             clickAfterStyle.html(`
@@ -641,4 +692,4 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             }`);
         })
     }
-}) (window);
+})(window);

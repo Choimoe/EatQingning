@@ -3,7 +3,7 @@
 
 <head>
     <title data-i18n="eat-kano"></title>
-    <meta itemprop="name" content="吃掉小鹿乃" />
+    <meta itemprop="name" content="青柠娘挑战" />
     <meta itemprop="description" content="新概念音游" />
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, width=device-width,target-densitydpi=device-dpi" />
@@ -57,12 +57,16 @@
                             <li><a class="dropdown-item" onclick="changeMode(MODE_NORMAL)" data-i18n="normal">NORMAL-I18N</a></li>
                             <li><a class="dropdown-item" onclick="changeMode(MODE_ENDLESS)" data-i18n="endless">ENDLESS-I18N</a></li>
                             <li><a class="dropdown-item" onclick="changeMode(MODE_PRACTICE)" data-i18n="practice">PRACTICE-I18N</a></li>
+                            <li><a class="dropdown-item" onclick="changeMode(MODE_STAIR)" data-i18n="stair">STAIR-I18N</a></li>
+                            <li><a class="dropdown-item" onclick="changeMode(MODE_MINI)" data-i18n="minijack">MINIJACK-I18N</a></li>
+                            <li><a class="dropdown-item" onclick="changeMode(MODE_LONG)" data-i18n="longjack">LONGJACK-I18N</a></li>
                         </ul>
                     </div>
                     <a class="btn btn-secondary btn-lg" onclick="show_setting()" data-i18n="settings">SETTINGS-I18N</a>
                 </div>
             </div>
             <div id="setting" class="container" style="display: none;">
+                <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=298 height=52 src="//music.163.com/outchain/player?type=0&id=12334532406&auto=0&height=32"></iframe>
                 <div class="container mb-3 btn-group">
                     <a data-i18n="img-before" type="button" class="btn text-nowrap btn-secondary me-1" onclick="getClickBeforeImage()" style="left: 0">IMG-BEFORE-I18N</a>
                     <input type="file" id="click-before-image" accept="image/*" class="d-none" onchange="saveClickBeforeImage()">

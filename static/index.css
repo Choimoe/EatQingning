@@ -140,13 +140,37 @@ body {
     background-position: center;
 }
 
-.t1,
-.t2,
-.t3,
-.t4,
+.t1 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore1.png);
+}
+.t2 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore2.png);
+}
+.t3 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore3.png);
+}
+.t4 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore4.png);
+}
 .t5 {
     background-size: auto 100%;
-    background-image: url(./image/ClickBefore.png);
+    background-image: url(./image/ClickBefore5.png);
+}
+.t6 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore6.png);
+}
+.t7 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore7.png);
+}
+.t8 {
+    background-size: auto 100%;
+    background-image: url(./image/ClickBefore8.png);
 }
 
 .tt1,
