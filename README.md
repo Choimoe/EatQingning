@@ -43,25 +43,25 @@
 
    - `./static/index.js`：游戏代码，可以在这里修改游戏机制，例如本项目创建方法 `nextKeyGen()` 来控制键型的生成、添加 `_gameHealth` 的判定等。
       ```js
-    function nextKeyGen(test) {
-        if (test === 1) { _jackked = 0; return _lastKey; }
-        if (mode === MODE_STAIR) {
-            if (Math.random() < _changeDirProb[_nextKeyDir === 1 ? 0 : 1][_lastKey]) _nextKeyDir = -_nextKeyDir;
-            _newKey = (_lastKey + _nextKeyDir + 4) % 4;
-            _lastKey = _newKey;
-            return _newKey;
-        }
-        if (mode === MODE_MINI) {
-            if (_jackked == 1) { _jackked = 0; return _lastKey; }
-            _lastKey = (_lastKey + 1 + Math.floor(Math.random() * 1000) % 3) % 4;
-            _jackked = 1;
-            return _lastKey;
-        }
-        if (mode === MODE_LONG) return _lastKey;
-        _lastKey = Math.floor(Math.random() * 1000) % 4;
-        _jackked = 1;
-        return _lastKey;
-    }
+       function nextKeyGen(test) {
+           if (test === 1) { _jackked = 0; return _lastKey; }
+           if (mode === MODE_STAIR) {
+               if (Math.random() < _changeDirProb[_nextKeyDir === 1 ? 0 : 1][_lastKey]) _nextKeyDir = -_nextKeyDir;
+               _newKey = (_lastKey + _nextKeyDir + 4) % 4;
+               _lastKey = _newKey;
+               return _newKey;
+           }
+           if (mode === MODE_MINI) {
+               if (_jackked == 1) { _jackked = 0; return _lastKey; }
+               _lastKey = (_lastKey + 1 + Math.floor(Math.random() * 1000) % 3) % 4;
+               _jackked = 1;
+               return _lastKey;
+           }
+           if (mode === MODE_LONG) return _lastKey;
+           _lastKey = Math.floor(Math.random() * 1000) % 4;
+           _jackked = 1;
+           return _lastKey;
+       }
       ```
       
    - `./static/index.css`：游戏界面样式，可以在这里修改外观，例如本项目修改 `ClickBefore` 对应的 `.t*` 块来实现多图片的加载。
