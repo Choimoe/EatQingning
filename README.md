@@ -15,6 +15,8 @@
 
 本小游戏为 [小游戏：吃掉小鹿乃](https://choimoe.github.io/games/EatQingning/index.html) 的魔改版本，更换了青柠娘的图标，加入了三个新的4K键形模式~
 
+表情包画师：[44454544](https://space.bilibili.com/13114465/)，欢迎关注喵！
+
 [English](README_EN.md)
 |
 [摸鱼的qiqi](https://space.bilibili.com/3461573737712484)
